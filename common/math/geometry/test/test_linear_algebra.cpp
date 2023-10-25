@@ -73,6 +73,21 @@ TEST(LINEAR_ALGEBRA, SUBTRACTION)
   EXPECT_VECTOR3_EQ((p - vec), geometry_msgs::msg::Vector3());
 }
 
+TEST(LINEAR_ALGEBRA, EQUAL)
+{
+  geometry_msgs::msg::Vector3 vec0 = math::geometry::vector3(0, 3, 1);
+  geometry_msgs::msg::Vector3 vec1 = math::geometry::vector3(0, 3, 1);
+
+  // This is fine usage of default ROS operator
+  EXPECT_TRUE(vec0.operator==(vec1));
+
+  // This is fine usage of custom operator (with machine epsilon)
+  EXPECT_TRUE(operator==(vec0, vec1));
+
+  // This is ambiguous and causes compilation error
+  EXPECT_TRUE(vec0 == vec1);
+}
+
 int main(int argc, char ** argv)
 {
   testing::InitGoogleTest(&argc, argv);
