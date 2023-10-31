@@ -352,6 +352,49 @@ TEST(CatmullRomSpline, CheckThrowingErrorWhenTheControlPointsAreNotEnough)
     common::SemanticError);
 }
 
+#include <geometry/spline/catmull_rom_subspline.hpp>
+
+TEST(CatmullRomSpline, SubsplineCollisionBugExample)
+{
+  auto make_point = [](double x, double y, double z = 0.0) {
+    geometry_msgs::msg::Point p;
+    p.x = x;
+    p.y = y;
+    p.z = z;
+    return p;
+  };
+
+  std::vector<geometry_msgs::msg::Point> points(3);
+  points[0] = make_point(0, 0);
+  points[1] = make_point(2, 2);
+  points[2] = make_point(4, 4);
+
+  auto spline_ptr = std::make_shared<math::geometry::CatmullRomSpline>(points);
+
+  math::geometry::CatmullRomSubspline subspline(
+    spline_ptr, std::sqrt(2.0), std::sqrt(18.0));  // (1,1) -> (3,3)
+
+  std::vector<geometry_msgs::msg::Point> polygon(4);
+  polygon[0] = make_point(0, 0.5);
+  polygon[1] = make_point(5, 0.5);
+  polygon[2] = make_point(5, 2);
+  polygon[3] = make_point(0, 2);
+
+  /**
+   * This collision is not detected, because the first collision (the one returned from the original
+   * spline) IS NOT inside the subspline, and no other collisions are considered.
+   */
+  auto s0 = subspline.getCollisionPointIn2D(polygon, false);
+  EXPECT_FALSE(s0);
+
+  /**
+   * This collision is detected, because the first collision (the one returned from the original
+   * spline) IS inside the subspline, so it can be returned.
+   */
+  auto s1 = subspline.getCollisionPointIn2D(polygon, true);
+  EXPECT_TRUE(s1);
+}
+
 int main(int argc, char ** argv)
 {
   testing::InitGoogleTest(&argc, argv);
