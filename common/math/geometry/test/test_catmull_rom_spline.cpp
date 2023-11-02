@@ -352,6 +352,28 @@ TEST(CatmullRomSpline, CheckThrowingErrorWhenTheControlPointsAreNotEnough)
     common::SemanticError);
 }
 
+TEST(CatmullRomSpline, GetPolygonBugExample)
+{
+  auto make_point = [](double x, double y, double z = 0.0) {
+    geometry_msgs::msg::Point p;
+    p.x = x;
+    p.y = y;
+    p.z = z;
+    return p;
+  };
+
+  std::vector<geometry_msgs::msg::Point> points(3);
+  points[0] = make_point(0, 0);
+  points[1] = make_point(1, 0);
+  points[2] = make_point(2, 0);
+
+  math::geometry::CatmullRomSpline spline(points);
+
+  std::vector<geometry_msgs::msg::Point> polygon = spline.getPolygon(1, 0);  // num_points = 0
+
+  EXPECT_TRUE(polygon.empty());  // expecting the polygon to be empty is just one possibility
+}
+
 int main(int argc, char ** argv)
 {
   testing::InitGoogleTest(&argc, argv);
